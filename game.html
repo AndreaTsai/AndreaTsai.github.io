@@ -4,105 +4,70 @@
 <meta charset="UTF-8">
 <title>盲盒遊戲</title>
 <style>
-  body { font-family: Arial; display: flex; padding: 20px; }
-  #leftPanel { width: 200px; border-right: 1px solid #ccc; padding-right: 20px; }
-  #leftPanel h3 { text-align: center; }
-  #collected img { width: 100%; margin-bottom: 10px; }
-  #mainPanel { flex: 1; padding-left: 20px; text-align: center; }
-  #preview img, #result img { max-width: 300px; margin: 10px; }
-  button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
+  body { font-family: "Microsoft JhengHei", Arial; display: flex; padding: 20px; background-color: #f0f2f5; }
+  #leftPanel { width: 220px; border-right: 2px solid #ddd; padding-right: 20px; background: white; border-radius: 10px; padding: 15px; height: 90vh; overflow-y: auto; }
+  #leftPanel h3 { text-align: center; color: #333; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+  #collected img { width: 100%; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  #mainPanel { flex: 1; padding-left: 40px; text-align: center; }
+  #boxArea { margin: 30px auto; min-height: 300px; }
+  #boxImage { max-width: 300px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
+  #boxImage:hover { transform: scale(1.02); }
+  button { padding: 12px 30px; font-size: 18px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; background-color: #3498db; color: white; transition: 0.3s; }
+  button:hover { background-color: #2980b9; }
+  button:active { transform: translateY(2px); }
+  .result-text { font-size: 20px; font-weight: bold; color: #e74c3c; margin-top: 10px; height: 30px; }
 </style>
 </head>
 <body>
 
 <div id="leftPanel">
-  <h3>已抽到的盲盒</h3>
+  <h3>已抽到的收藏</h3>
   <div id="collected"></div>
 </div>
 
 <div id="mainPanel">
-  <h1>盲盒遊戲</h1>
+  <h1>🎸 盲盒抽抽樂 🎸</h1>
 
-  <!-- 管理者上傳區 -->
-  <div id="uploadSection">
-    <h2>上傳盲盒圖片 (管理者可見)</h2>
-    <p>盲盒圖片 (5張):</p>
-    <input type="file" id="fileInput" multiple accept="image/*"><br><br>
-    <p>未開盲盒圖片:</p>
-    <input type="file" id="closedInput" accept="image/*"><br><br>
-    <button onclick="saveImages()">儲存圖片</button>
-    <div id="preview"></div>
-  </div>
-
-  <!-- 玩家遊玩區 -->
-  <div id="playSection" style="display:none;">
-    <h2>開盲盒！</h2>
+  <div id="playSection">
     <div id="boxArea">
-      <img id="boxImage" src="" style="max-width:200px">
+      <img id="boxImage" src="images/盒.jpg" alt="盲盒">
+      <div id="statusMessage" class="result-text"></div>
     </div>
     <br>
-    <button onclick="openBox()">開盲盒</button>
-    <button onclick="confirmBox()">確定</button>
+    <button onclick="openBox()">點開盲盒</button>
+    <button onclick="confirmBox()" id="confirmBtn" style="display:none; background-color: #2ecc71;">加入收藏</button>
   </div>
 </div>
 
 <script>
-let images = [];        // 盲盒圖片
-let closedImage = '';   // 未開盲盒圖片
+// 直接定義圖片路徑 (位於 images 資料夾)
+const imageFolder = 'images/';
+const memberImages = ['石.jpg', '佑.jpg', '信.jpg', '莎.jpg', '獸.jpg'].map(name => imageFolder + name);
+const closedImage = imageFolder + '盒.jpg';
+
 let collected = [];     // 玩家已抽到的圖片
 let currentBox = '';    // 玩家當前抽到的圖片
-let isAdmin = true;     // 假設第一個人是管理者
 
-// 預覽上傳圖片
-document.getElementById('fileInput').addEventListener('change', function(e) {
-  const files = e.target.files;
-  const preview = document.getElementById('preview');
-  preview.innerHTML = '<p>盲盒圖片預覽：</p>';
-  for (let i = 0; i < files.length && i < 5; i++) {
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(files[i]);
-    preview.appendChild(img);
-  }
-});
-document.getElementById('closedInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  const preview = document.getElementById('preview');
-  const img = document.createElement('img');
-  img.src = URL.createObjectURL(file);
-  preview.appendChild(document.createElement('br'));
-  preview.appendChild(document.createTextNode('未開盲盒預覽：'));
-  preview.appendChild(document.createElement('br'));
-  preview.appendChild(img);
-});
+// 初始化：檢查外盒圖是否存在
+window.onload = function() {
+    document.getElementById('boxImage').src = closedImage;
+};
 
-// 儲存圖片 (管理者)
-function saveImages() {
-  const files = document.getElementById('fileInput').files;
-  const closedFile = document.getElementById('closedInput').files[0];
-  if (files.length < 5 || !closedFile) {
-    alert("請上傳5張盲盒圖片與1張未開盲盒圖片！");
-    return;
-  }
-  images = [];
-  for (let i = 0; i < 5; i++) {
-    images.push(URL.createObjectURL(files[i]));
-  }
-  closedImage = URL.createObjectURL(closedFile);
-  alert("圖片已儲存！");
-  document.getElementById('uploadSection').style.display = 'none';
-  document.getElementById('playSection').style.display = 'block';
-  document.getElementById('boxImage').src = closedImage;
-}
-
-// 開盲盒
+// 開盲盒功能
 function openBox() {
-  if (images.length === 0) {
-    alert("尚未有管理者設定圖片！");
+  if (currentBox !== '') {
+    alert("請先將目前的結果「加入收藏」喔！");
     return;
   }
-  const index = Math.floor(Math.random() * images.length);
-  currentBox = images[index];       // 隨機抽取
+
+  // 隨機抽取一張成員圖
+  const index = Math.floor(Math.random() * memberImages.length);
+  currentBox = memberImages[index];
+  
+  // 更新圖片顯示與按鈕
   document.getElementById('boxImage').src = currentBox;
+  document.getElementById('statusMessage').innerText = "恭喜抽中！";
+  document.getElementById('confirmBtn').style.display = 'inline-block';
 }
 
 // 確定抽到的盲盒
@@ -111,25 +76,21 @@ function confirmBox() {
     alert("請先點開盲盒！");
     return;
   }
+  
+  // 加入收藏清單
   collected.push(currentBox);
-  currentBox = '';
-  document.getElementById('boxImage').src = closedImage;
-
+  
   // 更新左邊已抽到列表
   const collectedDiv = document.getElementById('collected');
-  collectedDiv.innerHTML = '';
-  collected.forEach(src => {
-    const img = document.createElement('img');
-    img.src = src;
-    collectedDiv.appendChild(img);
-  });
-}
+  const img = document.createElement('img');
+  img.src = currentBox;
+  collectedDiv.prepend(img); // 使用 prepend 讓最新的顯示在最上面
 
-// 非管理者使用時直接隱藏上傳區
-if (!isAdmin) {
-  document.getElementById('uploadSection').style.display = 'none';
-  document.getElementById('playSection').style.display = 'block';
-  document.getElementById('boxImage').src = closedImage || ''; // 如果管理者尚未設定圖片會是空白
+  // 重設狀態
+  currentBox = '';
+  document.getElementById('boxImage').src = closedImage;
+  document.getElementById('statusMessage').innerText = "";
+  document.getElementById('confirmBtn').style.display = 'none';
 }
 </script>
 
