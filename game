@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盲盒抽取</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    padding: 50px;
+  }
+  .container {
+    display: flex;
+    gap: 30px;
+  }
+  .draw-area, .collected-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .draw-area img, .collected-area img {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 10px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #specialMessage {
+    color: orange;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 18px;
+    position: relative;
+  }
+  .star {
+    position: absolute;
+    font-size: 20px;
+    animation: starAnim 1s linear forwards;
+  }
+  @keyframes starAnim {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-50px) scale(2); opacity: 0; }
+  }
+  .collected-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 350px;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="draw-area">
+    <h3>抽取區</h3>
+    <img id="currentBox" src="images/box_closed.jpg" alt="未開盲盒">
+    <button id="drawBtn">開盲盒</button>
+    <button id="confirmBtn" disabled>確定</button>
+    <div id="specialMessage"></div>
+  </div>
+
+  <div class="collected-area">
+    <h3>已抽到</h3>
+    <div class="collected-list" id="collectedList"></div>
+  </div>
+</div>
+
+<script>
+const boxes = [
+  {name: "五月天球1", img: "images/ball1.jpg", prob: 19},
+  {name: "五月天球2", img: "images/ball2.jpg", prob: 19},
+  {name: "五月天球3", img: "images/ball3.jpg", prob: 19},
+  {name: "五月天球4", img: "images/ball4.jpg", prob: 19},
+  {name: "五月天球5", img: "images/ball5.jpg", prob: 19},
+  {name: "胡蘿蔔", img: "images/carrot.jpg", prob: 5}
+];
+
+const closedBoxImg = "images/box_closed.jpg";
+let currentDraw = null;
+
+const currentBox = document.getElementById("currentBox");
+const drawBtn = document.getElementById("drawBtn");
+const confirmBtn = document.getElementById("confirmBtn");
+const collectedList = document.getElementById("collectedList");
+const specialMessage = document.getElementById("specialMessage");
+
+function randomDraw() {
+  const rand = Math.random() * 100;
+  let sum = 0;
+  for (let box of boxes) {
+    sum += box.prob;
+    if (rand <= sum) {
+      return box;
+    }
+  }
+  return boxes[0]; // fallback
+}
+
+drawBtn.addEventListener("click", () => {
+  currentDraw = randomDraw();
+  currentBox.src = currentDraw.img;
+  confirmBtn.disabled = false;
+
+  // 顯示特別款訊息
+  if (currentDraw.name === "胡蘿蔔") {
+    specialMessage.textContent = "恭喜抽到特別款蔔蔔！";
+    spawnStars();
+  } else {
+    specialMessage.textContent = "";
+  }
+});
+
+confirmBtn.addEventListener("click", () => {
+  if (!currentDraw) return;
+  // 加到已抽列表
+  const img = document.createElement("img");
+  img.src = currentDraw.img;
+  img.alt = currentDraw.name;
+  collectedList.appendChild(img);
+
+  // 重置抽取區
+  currentBox.src = closedBoxImg;
+  currentDraw = null;
+  confirmBtn.disabled = true;
+  specialMessage.textContent = "";
+});
+
+// 星星效果
+function spawnStars() {
+  for (let i = 0; i < 10; i++) {
+    const star = document.createElement("div");
+    star.textContent = "⭐";
+    star.classList.add("star");
+    star.style.left = Math.random() * 120 + "px";
+    star.style.top = Math.random() * 50 + "px";
+    specialMessage.appendChild(star);
+    setTimeout(() => star.remove(), 1000);
+  }
+}
+</script>
+
+</body>
+</html>
