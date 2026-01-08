@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盲盒抽獎遊戲</title>
+<style>
+    :root {
+        --primary-color: #4CAF50;
+        --rare-color: #FFD700;
+    }
+    body { font-family: "Microsoft JhengHei", Arial, sans-serif; display: flex; margin: 0; padding: 20px; background-color: #f0f2f5; height: 100vh; }
+    
+    /* 左側面板 */
+    #leftPanel { 
+        width: 250px; 
+        border-right: 2px solid #ddd; 
+        padding-right: 20px; 
+        background: white; 
+        overflow-y: auto;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+    #leftPanel h3 { text-align: center; color: #333; position: sticky; top: 0; background: white; padding: 10px 0; margin-top: 0; }
+    #collected { display: flex; flex-direction: column; align-items: center; }
+    #collected img { width: 180px; margin-bottom: 15px; border-radius: 10px; border: 3px solid #eee; transition: transform 0.2s; }
+    #collected img:hover { transform: scale(1.05); }
+
+    /* 主面板 */
+    #mainPanel { flex: 1; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
+    
+    #boxImage { 
+        max-width: 280px; 
+        height: auto; 
+        border-radius: 15px; 
+        margin: 20px 0;
+        transition: all 0.3s ease;
+    }
+
+    /* 按鈕樣式 */
+    button { 
+        padding: 12px 30px; 
+        font-size: 18px; 
+        font-weight: bold;
+        margin: 10px; 
+        cursor: pointer; 
+        border: none; 
+        border-radius: 50px; 
+        background-color: var(--primary-color); 
+        color: white; 
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        transition: 0.3s; 
+    }
+    button:hover { background-color: #45a049; transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    .btn-confirm { background-color: #2196F3; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+    .btn-confirm:hover { background-color: #1976D2; }
+
+    /* 稀有特效 */
+    .rare-glow { filter: drop-shadow(0 0 15px gold); animation: pulse 1s infinite; }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+</head>
+<body>
+
+<div id="leftPanel">
+    <h3>我的收藏展覽館</h3>
+    <div id="collected"></div>
+</div>
+
+<div id="mainPanel">
+    <div id="uploadSection" class="card">
+        <h1>盲盒遊戲設定</h1>
+        <p>點擊下方按鈕以讀取本地圖片並開始</p>
+        <p style="font-size: 14px; color: #666;">(路徑：images/石,佑,信,盒,莎,獸,蔔.jpg)</p>
+        <button onclick="setupGame()">初始化遊戲</button>
+    </div>
+
+    <div id="playSection" class="card" style="display:none;">
+        <h2 id="statusTitle">準備好開盒了嗎？</h2>
+        <div id="boxArea">
+            <img id="boxImage" src="" alt="盲盒內容">
+        </div>
+        <br>
+        <button id="openBtn" onclick="openBox()">點我開盒</button>
+        <button id="confirmBtn" class="btn-confirm" onclick="confirmBox()" style="display:none;">收進口袋</button>
+    </div>
+</div>
+
+<script>
+    // 1. 設定圖片路徑與機率權重
+    const IMAGE_FOLDER = 'images/';
+    const boxData = [
+        { name: '石.jpg', weight: 0.19 },
+        { name: '佑.jpg', weight: 0.19 },
+        { name: '信.jpg', weight: 0.19 },
+        { name: '莎.jpg', weight: 0.19 },
+        { name: '獸.jpg', weight: 0.19 },
+        { name: '蔔.jpg', weight: 0.05 } // 5% 稀有
+    ];
+    const boxCover = '盒.jpg';
+
+    let closedImagePath = IMAGE_FOLDER + boxCover;
+    let currentBox = '';
+    let isOpened = false;
+
+    // 2. 初始化遊戲
+    function setupGame() {
+        document.getElementById('uploadSection').style.display = 'none';
+        document.getElementById('playSection').style.display = 'block';
+        document.getElementById('boxImage').src = closedImagePath;
+    }
+
+    // 3. 加權隨機抽取
+    function openBox() {
+        if (isOpened) return;
+
+        const randomNum = Math.random();
+        let cumulativeWeight = 0;
+        let selected = boxData[0].name; // 預設第一張
+
+        for (const item of boxData) {
+            cumulativeWeight += item.weight;
+            if (randomNum < cumulativeWeight) {
+                selected = item.name;
+                break;
+            }
+        }
+
+        currentBox = IMAGE_FOLDER + selected;
+        const boxImgElement = document.getElementById('boxImage');
+        
+        // 顯示結果
+        boxImgElement.src = currentBox;
+        isOpened = true;
+
+        // 特殊效果：如果是「蔔」
+        if (selected === '蔔.jpg') {
+            boxImgElement.classList.add('rare-glow');
+            document.getElementById('statusTitle').innerText = "！！！極稀有款：蔔！！！";
+            document.getElementById('statusTitle').style.color = "#d4af37";
+        } else {
+            document.getElementById('statusTitle').innerText =
