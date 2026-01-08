@@ -1,0 +1,68 @@
+// 設定圖片路徑
+const IMAGE_FOLDER = 'images/';
+
+// 設定圖片與對應的機率 (總和為 100)
+const items = [
+  { name: '石.jpg', weight: 19 },
+  { name: '佑.jpg', weight: 19 },
+  { name: '信.jpg', weight: 19 },
+  { name: '莎.jpg', weight: 19 },
+  { name: '獸.jpg', weight: 19 },
+  { name: '蔔.jpg', weight: 5  } // 機率較低
+];
+
+const closedFileName = '盒.jpg';
+
+let closedImage = '';   
+let collected = [];     
+let currentBox = '';    
+
+function saveImages() {
+  closedImage = IMAGE_FOLDER + closedFileName;
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('playSection').style.display = 'block';
+  document.getElementById('boxImage').src = closedImage;
+}
+
+// 根據權重抽獎的函式
+function openBox() {
+  // 1. 產生一個 1 到 100 的隨機數
+  let randomNum = Math.floor(Math.random() * 100) + 1;
+  let cumulativeWeight = 0;
+  let selectedImg = '';
+
+  // 2. 判斷隨機數落在哪個範圍
+  for (let item of items) {
+    cumulativeWeight += item.weight;
+    if (randomNum <= cumulativeWeight) {
+      selectedImg = IMAGE_FOLDER + item.name;
+      break;
+    }
+  }
+
+  currentBox = selectedImg;
+
+  // 更新顯示介面
+  const boxImg = document.getElementById('boxImage');
+  boxImg.src = currentBox;
+  
+  document.getElementById('statusTitle').innerText = "恭喜抽中！";
+  document.getElementById('openBtn').style.display = 'none';
+  document.getElementById('confirmBtn').style.display = 'inline-block';
+}
+
+function confirmBox() {
+  if (currentBox && !collected.includes(currentBox)) {
+    collected.push(currentBox);
+    const collectedDiv = document.getElementById('collected');
+    const newImg = document.createElement('img');
+    newImg.src = currentBox;
+    collectedDiv.appendChild(newImg);
+  }
+
+  document.getElementById('boxImage').src = closedImage;
+  document.getElementById('statusTitle').innerText = "再抽一個？";
+  document.getElementById('openBtn').style.display = 'inline-block';
+  document.getElementById('confirmBtn').style.display = 'none';
+  currentBox = '';
+}
