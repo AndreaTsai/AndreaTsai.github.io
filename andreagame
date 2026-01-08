@@ -1,0 +1,75 @@
+// 設定圖片路徑與權重
+const IMAGE_FOLDER = 'images/';
+
+// 定義內容與對應機率
+const boxData = [
+  { name: '石.jpg', weight: 0.19 },
+  { name: '佑.jpg', weight: 0.19 },
+  { name: '信.jpg', weight: 0.19 },
+  { name: '莎.jpg', weight: 0.19 },
+  { name: '獸.jpg', weight: 0.19 },
+  { name: '蔔.jpg', weight: 0.05 } // 只有 5% 機率
+];
+
+const boxCover = '盒.jpg';
+
+let images = [];        
+let closedImage = '';   
+let collected = [];     
+let currentBox = '';    
+
+// 初始化遊戲
+function setupGame() {
+  images = boxData.map(item => IMAGE_FOLDER + item.name);
+  closedImage = IMAGE_FOLDER + boxCover;
+
+  alert("圖片與機率設定載入成功！遊戲開始。");
+
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('playSection').style.display = 'block';
+  document.getElementById('boxImage').src = closedImage;
+}
+
+// 加權隨機抽取邏輯
+function openBox() {
+  const randomNum = Math.random(); // 產生 0 ~ 1 之間的隨機數
+  let cumulativeWeight = 0;
+  let selectedImg = '';
+
+  for (let i = 0; i < boxData.size; i++) { // 這裡修正為直接跑 boxData
+    // 改用更直觀的迴圈方式
+  }
+
+  // 遍歷所有獎項，累計機率區間
+  for (const item of boxData) {
+    cumulativeWeight += item.weight;
+    if (randomNum < cumulativeWeight) {
+      selectedImg = IMAGE_FOLDER + item.name;
+      break;
+    }
+  }
+
+  currentBox = selectedImg; 
+  document.getElementById('boxImage').src = currentBox;
+
+  // 如果抽到「蔔」，可以額外跳個驚喜提示
+  if (currentBox.includes('蔔.jpg')) {
+    console.log("恭喜！抽中 5% 稀有款：蔔！");
+  }
+}
+
+// 確定抽到並放入左側列表 (這部分邏輯不變)
+function confirmBox() {
+  if (!currentBox || document.getElementById('boxImage').src.includes(boxCover)) {
+    alert("請先開盲盒！");
+    return;
+  }
+  collected.push(currentBox);
+  const collectedDiv = document.getElementById('collected');
+  const newImg = document.createElement('img');
+  newImg.src = currentBox;
+  collectedDiv.prepend(newImg); 
+
+  currentBox = '';
+  document.getElementById('boxImage').src = closedImage;
+}
